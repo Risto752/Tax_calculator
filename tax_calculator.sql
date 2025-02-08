@@ -158,3 +158,8 @@ INSERT INTO sold_items (sale_id, product_id, quantity) VALUES (LAST_INSERT_ID(),
 INSERT INTO sales (buyer_id) VALUES (20);
 -- Spanish Festival Organizing (onsite product, quantity 3)
 INSERT INTO sold_items (sale_id, product_id, quantity) VALUES (LAST_INSERT_ID(), 13, 3);
+
+
+-- Avoiding recalculating the tax for sales that have already been processed
+ALTER TABLE sales
+ADD COLUMN processed BOOLEAN NOT NULL DEFAULT FALSE;
