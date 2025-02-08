@@ -66,7 +66,7 @@ def get_total_sales_amount(connection, sale_id)
 def calculate_eu_tax(connection, sale, vat_rate, is_company)
 
     if !is_company
-         process_tax(connection,sale,vat_rate, "Local tax")
+         process_tax(connection,sale,vat_rate, "Local eu tax")
     else
         mark_transaction_when_no_tax(connection, sale, "reverse_charge")
 
@@ -201,3 +201,5 @@ end
 
 # Run the tax calculation function
 calculate_tax
+
+
