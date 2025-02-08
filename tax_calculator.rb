@@ -61,50 +61,23 @@ def get_total_sales_amount(connection, sale_id)
     connection.query(query)
   end
   
-  def calculate_spanish_tax(connection, sale, vat_rate)
 
-    sale_amount = get_total_sales_amount(connection, sale["id"])
-    calculated_tax = sale_amount * (vat_rate.to_f / 100)
-    vat_status = "Spanish VAT"
-    total_amount = sale_amount + calculated_tax
-
-    update_sale(connection, sale["id"],sale_amount, total_amount, calculated_tax, vat_status)
-
-  end
   
 def calculate_eu_tax(connection, sale, vat_rate, is_company)
 
     if !is_company
-        sale_amount = get_total_sales_amount(connection, sale["id"])
-        calculated_tax = sale_amount * (vat_rate.to_f / 100)
-        vat_status = "Local VAT"
-        total_amount = sale_amount + calculated_tax
-
-    update_sale(connection, sale["id"],sale_amount, total_amount, calculated_tax, vat_status)
+         process_tax(connection,sale,vat_rate, "Local tax")
     else
-        sale_amount = get_total_sales_amount(connection, sale["id"])
-        vat_status = "reverse charge"
-        total_amount = sale_amount
-        calculated_tax = 0
-        update_sale(connection, sale["id"],sale_amount, total_amount, calculated_tax, vat_status)
+        mark_transaction_when_no_tax(connection, sale, "reverse_charge")
 
   end
 
 end
 
-def calculate_local_tax(connection, sale,vat_rate)
+def mark_transaction_when_no_tax(connection, sale, transaction_marker)
 
     sale_amount = get_total_sales_amount(connection, sale["id"])
-    calculated_tax = sale_amount * (vat_rate.to_f / 100)
-    vat_status = "Local tax"
-    total_amount = sale_amount + calculated_tax
-
-end
-
-def mark_transaction_when_no_tax(connection, sale, marker)
-
-    sale_amount = get_total_sales_amount(connection, sale["id"])
-    vat_status = marker
+    vat_status = transaction_marker
     total_amount = sale_amount
     calculated_tax = 0
     update_sale(connection, sale["id"],sale_amount, total_amount, calculated_tax, vat_status)
@@ -112,6 +85,14 @@ def mark_transaction_when_no_tax(connection, sale, marker)
 
 end
 
+def process_tax(connection, sale, vat_rate, transaction_marker)
+
+     vat_status = transaction_marker
+    sale_amount = get_total_sales_amount(connection, sale["id"])
+    calculated_tax = sale_amount * (vat_rate.to_f / 100)
+    total_amount = sale_amount + calculated_tax
+    update_sale(connection, sale["id"],sale_amount, total_amount, calculated_tax, vat_status)
+end
 
 
 def calculate_tax
@@ -153,7 +134,7 @@ def calculate_tax
 
         when "spain"
            
-            calculate_spanish_tax(connection,sale,vat_rate)
+            process_tax(connection,sale,vat_rate,"Spanish VAT")
     
         when "eu"
 
@@ -171,7 +152,7 @@ def calculate_tax
 
         when "spain"
            
-            calculate_spanish_tax(connection,sale,vat_rate)
+            process_tax(connection,sale,vat_rate,"Spanish VAT")
 
         when "eu"
 
@@ -191,15 +172,15 @@ def calculate_tax
 
         when "spain"
       
-            calculate_spanish_tax(connection,sale,vat_rate)
+            process_tax(connection,sale,vat_rate,"Spanish VAT")
 
         when "eu"
            
-            calculate_local_tax(connection,sale,vat_rate)
+            process_tax(connection,sale,vat_rate,"Local tax")
 
         when "non_eu"
            
-            calculate_local_tax(connection,sale,vat_rate)
+            process_tax(connection,sale,vat_rate,"Local tax")
 
         end
         
