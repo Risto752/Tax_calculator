@@ -163,3 +163,6 @@ INSERT INTO sold_items (sale_id, product_id, quantity) VALUES (LAST_INSERT_ID(),
 -- Avoiding recalculating the tax for sales that have already been processed
 ALTER TABLE sales
 ADD COLUMN processed BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE sales
+ADD COLUMN vat_status VARCHAR(50) NOT NULL;
