@@ -10,39 +10,42 @@ def get_database_connection
   )
 end
 
+# Preventing SQL injection with prepared statements, in case system expands to use frontend, or other possible threats
 def get_product_type(connection, sale_id)
     query = <<-SQL
-      SELECT pt.name AS product_type
-      FROM sold_items si
-      JOIN products p ON si.product_id = p.id
-      JOIN product_types pt ON p.product_type_id = pt.id
-      WHERE si.sale_id = #{sale_id}
-    SQL
-    result = connection.query(query).first
-    result # Returns the product type name
+    SELECT pt.name AS product_type
+    FROM sold_items si
+    JOIN products p ON si.product_id = p.id
+    JOIN product_types pt ON p.product_type_id = pt.id
+    WHERE si.sale_id = ?
+  SQL
+  statement = connection.prepare(query)
+  result = statement.execute(sale_id).first
+  
   end
 
   def get_buyer_country_and_type(connection, buyer_id)
     query = <<-SQL
-      SELECT c.name AS country_name, c.vat_applicable, c.vat_rate, b.is_company
-      FROM buyers b
-      JOIN countries c ON b.country_id = c.id
-      WHERE b.id = #{buyer_id}
+    SELECT c.name AS country_name, c.vat_applicable, c.vat_rate, b.is_company
+    FROM buyers b
+    JOIN countries c ON b.country_id = c.id
+    WHERE b.id = ?
     SQL
-    result = connection.query(query).first
-    result # Returns the country name, VAT applicable status, VAT rate, and buyer type
-  end
+    statement = connection.prepare(query)
+    result = statement.execute(buyer_id).first # Returns the country name, VAT applicable status, VAT rate, and buyer type
+end
 
   # Get sale amount from sold items and calculate total sale
 def get_total_sales_amount(connection, sale_id)
     
     query = <<-SQL
-      SELECT si.quantity, p.price_in_euros
-      FROM sold_items si
-      JOIN products p ON si.product_id = p.id
-      WHERE si.sale_id = #{sale_id}
+    SELECT si.quantity, p.price_in_euros
+    FROM sold_items si
+    JOIN products p ON si.product_id = p.id
+    WHERE si.sale_id = ?
     SQL
-    sales = connection.query(query)
+    statement = connection.prepare(query)
+    sales = statement.execute(sale_id)
   
     total_amount = 0.0
     sales.each do |item|
@@ -53,12 +56,15 @@ def get_total_sales_amount(connection, sale_id)
   end
 
   def update_sale(connection, sale_id, subtotal, total_amount, calculated_tax, vat_status)
+    
     query = <<-SQL
-      UPDATE sales
-      SET subtotal = #{subtotal}, total_amount = #{total_amount}, calculated_tax = #{calculated_tax}, vat_status = '#{vat_status}', processed = true
-      WHERE id = #{sale_id}
+    UPDATE sales
+     SET subtotal = ?, total_amount = ?, calculated_tax = ?, vat_status = ?, processed = ?
+     WHERE id = ?
     SQL
-    connection.query(query)
+    statement = connection.prepare(query)
+    statement.execute(subtotal, total_amount, calculated_tax, vat_status, true, sale_id)
+
   end
   
 
