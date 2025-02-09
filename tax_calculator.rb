@@ -161,10 +161,7 @@ def calculate_tax
     
      
       product_type = get_product_type(connection, sale['id'])
-      buyer_info = get_buyer_country_and_type(connection,sale["buyer_id"])
-
-      is_company = buyer_info["is_company"]
-      
+      buyer_info = get_buyer_country_and_type(connection,sale["buyer_id"])   
       is_company = buyer_info["is_company"] == 1
       vat_applicable = buyer_info["vat_applicable"]
       vat_rate = buyer_info["vat_rate"]

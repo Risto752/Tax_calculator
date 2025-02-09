@@ -62,6 +62,7 @@ INSERT INTO buyers (id, name, country_id, is_company) VALUES
 (20, 'Innovative Group', 10, 1); -- Buyer: Innovative Group, Country: Portugal, Company
 
 
+
 -- Create products table (Based on Munchitos S.A. business model)
 CREATE TABLE products (
     id INT PRIMARY KEY AUTO_INCREMENT,
