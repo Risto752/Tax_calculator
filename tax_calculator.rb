@@ -100,6 +100,50 @@ def process_tax(connection, sale, vat_rate, transaction_marker)
     update_sale(connection, sale["id"],sale_amount, total_amount, calculated_tax, vat_status)
 end
 
+def handle_tax_for_product_type(connection, sale, product_type, vat_applicable, vat_rate, is_company)
+    case product_type
+    when "good"
+      handle_good_sale(connection, sale, vat_applicable, vat_rate, is_company)
+    when "digital"
+      handle_digital_sale(connection, sale, vat_applicable, vat_rate, is_company)
+    when "onsite"
+      handle_onsite_sale(connection, sale, vat_applicable, vat_rate)
+    else
+      puts "Unknown product type: #{product_type}"
+    end
+  end
+  
+  def handle_good_sale(connection, sale, vat_applicable, vat_rate, is_company)
+    case vat_applicable
+    when "spain"
+      process_tax(connection, sale, vat_rate, "Spanish VAT")
+    when "eu"
+      calculate_eu_tax(connection, sale, vat_rate, is_company)
+    when "non_eu"
+      mark_transaction_when_no_tax(connection, sale, "export")
+    end
+  end
+  
+  def handle_digital_sale(connection, sale, vat_applicable, vat_rate, is_company)
+    case vat_applicable
+    when "spain"
+      process_tax(connection, sale, vat_rate, "Spanish VAT")
+    when "eu"
+      calculate_eu_tax(connection, sale, vat_rate, is_company)
+    when "non_eu"
+      mark_transaction_when_no_tax(connection, sale, "no tax applied")
+    end
+  end
+  
+  def handle_onsite_sale(connection, sale, vat_applicable, vat_rate)
+    case vat_applicable
+    when "spain"
+      process_tax(connection, sale, vat_rate, "Spanish VAT")
+    when "eu", "non_eu"
+      process_tax(connection, sale, vat_rate, "Local tax")
+    end
+  end
+  
 
 def calculate_tax
  
@@ -121,79 +165,11 @@ def calculate_tax
 
       is_company = buyer_info["is_company"]
       
-
-      if is_company == 1
-        is_company = true
-      else
-        is_company = false
-      end
+      is_company = buyer_info["is_company"] == 1
       vat_applicable = buyer_info["vat_applicable"]
       vat_rate = buyer_info["vat_rate"]
 
-       
-
-      case product_type["product_type"]
-
-      when "good"
-      
-        case vat_applicable
-
-        when "spain"
-           
-            process_tax(connection,sale,vat_rate,"Spanish VAT")
-    
-        when "eu"
-
-            calculate_eu_tax(connection,sale,vat_rate,is_company)
-           
-        when "non_eu"
-
-            mark_transaction_when_no_tax(connection,sale,"export")
-           
-        end
-        
-      when "digital"
-       
-        case vat_applicable
-
-        when "spain"
-           
-            process_tax(connection,sale,vat_rate,"Spanish VAT")
-
-        when "eu"
-
-
-        calculate_eu_tax(connection,sale,vat_rate,is_company)
-        
-          
-        when "non_eu"
-           
-            mark_transaction_when_no_tax(connection, sale, "no tax applied")
-
-        end
-        
-      when "onsite"
-      
-        case vat_applicable
-
-        when "spain"
-      
-            process_tax(connection,sale,vat_rate,"Spanish VAT")
-
-        when "eu"
-           
-            process_tax(connection,sale,vat_rate,"Local tax")
-
-        when "non_eu"
-           
-            process_tax(connection,sale,vat_rate,"Local tax")
-
-        end
-        
-      else
-        puts "Unknown product type: #{product_type['product_type']}"
-
-      end
+      handle_tax_for_product_type(connection, sale, product_type["product_type"], vat_applicable, vat_rate, is_company)
 
      
    
